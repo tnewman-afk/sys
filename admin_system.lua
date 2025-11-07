@@ -36,16 +36,39 @@ end
 -- Get services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
 local localPlayer = Players.LocalPlayer
 local myName = localPlayer.Name:lower()
 
--- Chat functionality
-local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-local sayMessageRequest = chatEvents and chatEvents:FindFirstChild("SayMessageRequest")
-
+-- Chat functionality with multiple methods
 local function sendMessage(msg)
-    if sayMessageRequest then
-        sayMessageRequest:FireServer(msg, "All")
+    -- Method 1: Legacy Chat System
+    local success1 = pcall(function()
+        local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        if chatEvents then
+            local sayMessageRequest = chatEvents:FindFirstChild("SayMessageRequest")
+            if sayMessageRequest then
+                sayMessageRequest:FireServer(msg, "All")
+            end
+        end
+    end)
+    
+    -- Method 2: TextChatService (new chat system)
+    local success2 = pcall(function()
+        local textChannel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+        if textChannel then
+            textChannel:SendAsync(msg)
+        end
+    end)
+    
+    -- Method 3: Direct Player:Chat()
+    local success3 = pcall(function()
+        localPlayer:Chat(msg)
+    end)
+    
+    -- If none worked, warn the user
+    if not (success1 or success2 or success3) then
+        warn("[Admin System] Failed to send message:", msg)
     end
 end
 
